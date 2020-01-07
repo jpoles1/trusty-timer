@@ -8,5 +8,6 @@ edition = "2018"
 
 [dependencies]
 tokio = { version = "0.2", features = ["macros", "time"] }
-rodio = "0.10.0"
+rodio = "0.10"
 pbr = "1.0"
+regex = "1.3"

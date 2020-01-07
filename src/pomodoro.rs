@@ -4,6 +4,7 @@ use std::fmt;
 use std::io::Stdout;
 use tokio::time;
 use pbr::ProgressBar;
+use super::webblock;
 
 pub enum PomodoroPhase {
     Work,
@@ -57,6 +58,10 @@ impl Timer {
         self.timer_started = Some(Instant::now());
         self.pbar.set(0);
         self.pbar.total = self.current_phase_duration().as_secs();
+        match self.current_phase {
+            PomodoroPhase::Work => { webblock::add_web_blocks(); },
+            PomodoroPhase::Free => { webblock::rm_web_blocks(); },
+        }
         self.poll().await;
     }
     pub async fn poll(&mut self) {
