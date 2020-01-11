@@ -30,6 +30,20 @@ pub struct Timer {
     pbar: ProgressBar<Stdout>,
 }
 
+impl Default for Timer {
+    fn default() -> Self {
+        let work_duration = Duration::from_secs(25 * 60);
+        let free_duration = Duration::from_secs(5 * 60);
+        return Timer {
+            work_duration, free_duration,
+            finished_work_cycles: 0, 
+            finished_free_cycles: 0,
+            current_phase: PomodoroPhase::Work,
+            timer_started: None,
+            pbar: ProgressBar::new(work_duration.as_secs()),
+        };
+    }
+}
 
 
 impl Timer {
