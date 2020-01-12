@@ -1,31 +1,23 @@
-use std::time::Duration;
-use std::io::{stdin, stdout, Read, Write};
-use orbtk::prelude::*;
+use std::time::Instant;
+use orbtk::{prelude::*, shell::ShellRequest};
 
 mod pomodoro;
 mod sounds;
 mod webblock; 
 
-static WIN_WIDTH: f64 = 400.0;
-static WIN_HEIGHT: f64 = 200.0;
-
-fn term_pause(msg: String) {
-    let mut stdout = stdout();
-    stdout.write(msg.as_bytes()).unwrap();
-    stdout.flush().unwrap();
-    stdin().read(&mut [0;2]).unwrap();
-}
+static WIN_WIDTH: f64 = 320.0;
+static WIN_HEIGHT: f64 = 160.0;
 
 #[derive(Debug, Copy, Clone)]
 enum Action {
     Start,
 }
 
-#[derive(Default)]
+#[derive(Default, AsAny)]
 pub struct MainViewState {
-    blocklist: String,
     timer: pomodoro::Timer,
     action: Option<Action>,
+    last_update: Option<Instant>,
 }
 
 
@@ -36,26 +28,68 @@ impl MainViewState {
 }
 
 impl State for MainViewState {
-    fn update(&self, ctx: &mut Context) {
+    fn init(&mut self, _: &mut Registry, ctx: &mut Context) {
+        ctx.widget().set("timer_not_started", true);
+        ctx.widget().set("phase_string", String16::from("Current Phase: Work"));
+        ctx.widget().set("time_remaining_string", String16::from("Time Remaining: Not Started"));
+    }
+    fn update(&mut self, _: &mut Registry, ctx: &mut Context) {
         if let Some(action) = self.action {
             match action {
-                Start => {
+                Action::Start => {
+                    ctx.widget().set("timer_not_started", false);
+                    self.timer.start_phase();
                 }
             }
-            //self.action = None;
+            self.action = None;
+        }
+        if !self.timer.timer_started.is_none() {
+            let cycle_duration = self.timer.current_phase_duration();
+            if (Instant::now() - self.timer.timer_started.unwrap()) > cycle_duration {
+                self.timer.complete_phase();
+                ctx.widget().set("phase_string", String16::from(format!("Current Phase: {}", self.timer.current_phase)));
+                ctx.widget().set("timer_not_started", true);
+                ctx.request_sender().send(ShellRequest::Update).unwrap();
+                sounds::play_ding();
+            } else {
+                let time_remaining = self.timer.timer_started.unwrap() + cycle_duration - Instant::now();
+                ctx.widget().set("time_remaining_string", String16::from(format!("Time Remaining: {} sec",  time_remaining.as_secs() )));
+                if self.last_update.is_none() || (Instant::now() - self.last_update.unwrap()).as_millis() > 500 {
+                    ctx.request_sender().send(ShellRequest::Update).unwrap();    
+                    self.last_update = Some(Instant::now());
+                }
+            }
+        } else {
+            ctx.widget().set("time_remaining_string", String16::from("Time Remaining: Not Started"));
         }
     }
 }
 
 widget!(MainView<MainViewState> {
-    text: String16
+    phase_string: String16,
+    timer_not_started: bool,
+    time_remaining_string: String16
 });
 
 impl Template for MainView {
     fn template(self, id: Entity, ctx: &mut BuildContext) -> Self {
         return self.name("Main View").child(
-            TextBlock::create().text("Trusty Timer").horizontal_alignment("Center").font_size(20.0).build(ctx)
-        );
+            Grid::create().rows(Rows::create().row("*").row("*").row("*").build())
+            .child(
+                TextBlock::create().text("Trusty Timer").horizontal_alignment("Center").font_size(20.0).attach(Grid::row(0)).build(ctx)
+            ).child(
+                TextBlock::create().text(("phase_string", id)).horizontal_alignment("Center").font_size(16.0).attach(Grid::row(1)).build(ctx)
+            ).child(
+                TextBlock::create().text(("time_remaining_string", id)).horizontal_alignment("Center").margin((0, 20, 0, 0)).font_size(16.0).attach(Grid::row(1)).build(ctx)
+            ).child(
+                Button::create().text("Start Timer").attach(Grid::row(2))
+                .enabled(("timer_not_started", id))
+                .on_click(move |states, _| -> bool {
+                    state(id, states).action(Action::Start);
+                    true
+                }).build(ctx)
+            ).build(ctx)
+        )
     }
 }
 
@@ -74,12 +108,11 @@ fn start_gui() {
 
 #[tokio::main]
 async fn main() {
-    start_gui();
     webblock::rm_web_blocks();
-    let mut timer = pomodoro::Timer::new(Duration::from_secs(25 * 60), Duration::from_secs(5 * 60));
-    loop {
-        sounds::play_ding();
-        term_pause(format!("\nPress enter to start your next phase: {} for {} minutes\n", timer.current_phase, timer.current_phase_duration().as_secs()/60));
-        timer.start_phase().await;
-    }
+    start_gui();
+}
+
+// helper to request MainViewState
+fn state<'a>(id: Entity, states: &'a mut StatesContext) -> &'a mut MainViewState {
+    states.get_mut(id)
 }
