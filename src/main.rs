@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 use std::time::Instant;
 use orbtk::{prelude::*, shell::ShellRequest};
 
