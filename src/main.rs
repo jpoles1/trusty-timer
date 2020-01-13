@@ -78,7 +78,7 @@ impl Template for MainView {
         return self.name("Main View").child(
             Grid::create().rows(Rows::create().row("*").row("*").row("*").build())
             .child(
-                TextBlock::create().text("Trusty Timer").horizontal_alignment("Center").font_size(20.0).attach(Grid::row(0)).build(ctx)
+                TextBlock::create().text("Trusty Timer").horizontal_alignment("Center").margin((0, 10, 0, 0)).font_size(20.0).attach(Grid::row(0)).build(ctx)
             ).child(
                 TextBlock::create().text(("phase_string", id)).horizontal_alignment("Center").font_size(16.0).attach(Grid::row(1)).build(ctx)
             ).child(
