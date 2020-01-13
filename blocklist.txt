@@ -1,5 +1,7 @@
 reddit.com
 redditstatic.com
+i.redd.it
 facebook.com
 gfycat.com
 imgur.com
+feedly.com
