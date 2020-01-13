@@ -12,3 +12,6 @@ rodio = "0.10"
 regex = "1.3"
 #orbtk = { git = "https://github.com/redox-os/orbtk.git", branch="develop", features = ["debug"] }
 orbtk = { git = "https://github.com/redox-os/orbtk.git", branch="develop" }
+
+[build-dependencies]
+embed-resource = "1.3"
