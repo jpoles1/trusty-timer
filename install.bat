@@ -1,3 +1,1 @@
-elevate.exe -k xcopy /I /Y /O "dist" "C:/ProgramData/Microsoft/Windows/Start Menu/Programs/Trusty Timer"
-pause
-exit
+elevate.exe -k xcopy /I /Y /O "dist" "%ALLUSERSPROFILE%/Microsoft/Windows/Start Menu/Programs/Trusty Timer"
