@@ -1,14 +1,15 @@
-#![windows_subsystem = "windows"]
+//#![windows_subsystem = "windows"]
 
 use std::time::Instant;
 use orbtk::{prelude::*, shell::ShellRequest};
 
 mod pomodoro;
 mod sounds;
-mod webblock; 
+mod webblock;
+mod numeric_input;
 
 static WIN_WIDTH: f64 = 320.0;
-static WIN_HEIGHT: f64 = 160.0;
+static WIN_HEIGHT: f64 = 220.0;
 
 #[derive(Debug, Copy, Clone)]
 enum Action {
@@ -76,7 +77,7 @@ widget!(MainView<MainViewState> {
 impl Template for MainView {
     fn template(self, id: Entity, ctx: &mut BuildContext) -> Self {
         return self.name("Main View").child(
-            Grid::create().rows(Rows::create().row("*").row("*").row("*").build())
+            Grid::create().rows(Rows::create().row("*").row("*").row("*").row("*").build())
             .child(
                 TextBlock::create().text("Trusty Timer").horizontal_alignment("Center").margin((0, 10, 0, 0)).font_size(20.0).attach(Grid::row(0)).build(ctx)
             ).child(
@@ -90,6 +91,8 @@ impl Template for MainView {
                     state(id, states).action(Action::Start);
                     true
                 }).build(ctx)
+            ).child(
+                numeric_input::NumericInput::create().attach(Grid::row(3)).value(25.0).increment(2.0).build(ctx)
             ).build(ctx)
         )
     }

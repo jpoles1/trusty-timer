@@ -1,5 +1,8 @@
 extern crate embed_resource;
 
 fn main() {
-    embed_resource::compile("trusty-timer-manifest.rc");
+    #[cfg(build = "release")]
+    {
+        embed_resource::compile("trusty-timer-manifest.rc");
+    }
 }
